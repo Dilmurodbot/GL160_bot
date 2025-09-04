@@ -32,7 +32,10 @@ bot = telebot.TeleBot(BOT_TOKEN)
 # Async BalanceMonitor uchun Thread wrapper
 # ------------------------
 def start_monitoring_thread(monitor):
-    asyncio.run(monitor.start_monitoring())
+    try:
+        asyncio.run(monitor.start_monitoring())
+    except Exception as e:
+        logger.error(f"Monitoring xatosi: {e}")
 
 if monitoring_enabled:
     monitor = BalanceMonitor(bot_application=bot)
@@ -71,7 +74,7 @@ def echo_all(message):
 if __name__ == "__main__":
     while True:
         try:
-            bot.polling(none_stop=True, timeout=20, long_polling_timeout=30)
+            bot.polling(none_stop=True, timeout=60, long_polling_timeout=90)
         except Exception as e:
             logger.error(f"Xatolik yuz berdi: {e}")
             sleep(10)
