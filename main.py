@@ -3,7 +3,13 @@ import telebot
 import logging
 import threading
 from time import sleep
-from balance_monitor import BalanceMonitor  # agar sizda fon monitoring bo'lsa
+
+# BalanceMonitor import qilamiz
+try:
+    from balance_monitor import BalanceMonitor
+    monitoring_enabled = True
+except ImportError:
+    monitoring_enabled = False
 
 # Logging sozlamalari
 logging.basicConfig(
@@ -13,7 +19,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.info("Bot ishga tushirilmoqda...")
 
-# Telegram tokenini environment variable'dan olish
+# Telegram token
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 if not BOT_TOKEN:
     logger.error("BOT_TOKEN topilmadi!")
@@ -24,8 +30,8 @@ bot = telebot.TeleBot(BOT_TOKEN)
 # ------------------------
 # Background monitoring
 # ------------------------
-if "BalanceMonitor" in globals():  # Agar BalanceMonitor mavjud bo'lsa
-    monitor = BalanceMonitor()
+if monitoring_enabled:
+    monitor = BalanceMonitor(bot_application=bot)
     threading.Thread(target=monitor.start_monitoring, daemon=True).start()
     logger.info("Background monitoring ishga tushdi...")
 
@@ -61,8 +67,7 @@ def echo_all(message):
 if __name__ == "__main__":
     while True:
         try:
-            logger.info("Bot polling ishga tushdi...")
-            bot.polling(none_stop=True)
+            bot.polling(none_stop=True, timeout=20, long_polling_timeout=30)
         except Exception as e:
             logger.error(f"Xatolik yuz berdi: {e}")
-            sleep(5)  # xatolikdan keyin 5 soniya kutish
+            sleep(10)
