@@ -2,16 +2,17 @@ import os
 import telebot
 import logging
 import threading
+import asyncio
 from time import sleep
 
-# BalanceMonitor import qilamiz
+# BalanceMonitor import
 try:
     from balance_monitor import BalanceMonitor
     monitoring_enabled = True
 except ImportError:
     monitoring_enabled = False
 
-# Logging sozlamalari
+# Logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -28,11 +29,14 @@ if not BOT_TOKEN:
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # ------------------------
-# Background monitoring
+# Async BalanceMonitor uchun Thread wrapper
 # ------------------------
+def start_monitoring_thread(monitor):
+    asyncio.run(monitor.start_monitoring())
+
 if monitoring_enabled:
     monitor = BalanceMonitor(bot_application=bot)
-    threading.Thread(target=monitor.start_monitoring, daemon=True).start()
+    threading.Thread(target=start_monitoring_thread, args=(monitor,), daemon=True).start()
     logger.info("Background monitoring ishga tushdi...")
 
 # ------------------------
